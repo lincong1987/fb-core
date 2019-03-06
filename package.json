@@ -1,6 +1,6 @@
 {
   "name": "fb-core",
-  "version": "1.0.8",
+  "version": "1.0.12",
   "description": "fb-core",
   "main": "./dist/fb-core.js",
   "scripts": {
@@ -31,9 +31,13 @@
   },
   "dependencies": {
     "dayjs": "^1.8.6",
-    "jquery": "^3.3.1",
+    "jquery": "^1.12.4",
     "lodash": "^4.17.11",
     "yox": "^0.63.0",
     "yox-router": "^0.20.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lincong1987/fb-core.git"
   }
 }

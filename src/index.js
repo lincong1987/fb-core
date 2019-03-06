@@ -15,11 +15,11 @@
 
 
 let Yox = require("yox");
-let jQuery = $ = require("jquery");
-let lodash = _ = require("lodash");
-let Store  = require("./lib/store");
-let Router = require("./lib/router");
-let dayjs  = require("./lib/dayjs");
+let jQuery = require("jquery");
+let _ = require("lodash");
+let Store  = require("./lib/store").Store;
+let Router = require("./lib/router").Router;
+let dayjs  = require("./lib/dayjs").dayjs;
 let pkg = require("../package.json");
 
 
@@ -195,7 +195,7 @@ exports.FireBird = FireBird;
 exports.Store = Store;
 exports.Router = Router;
 exports.jQuery = jQuery;
-exports.$ = $;
+exports.$ = jQuery;
 exports._ = _;
 exports.dayjs = dayjs;
 exports.version = version;
