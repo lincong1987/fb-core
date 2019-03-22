@@ -1,6 +1,6 @@
 {
   "name": "fb-core",
-  "version": "1.0.15",
+  "version": "1.0.16",
   "description": "fb-core",
   "main": "./dist/fb-core.js",
   "scripts": {
@@ -30,7 +30,7 @@
   },
   "dependencies": {
     "dayjs": "^1.8.6",
-    "fb-polyfill": "^1.0.0",
+    "fb-polyfill": "^1.0.2",
     "jquery": "^1.12.4",
     "lodash": "^4.17.11",
     "yox": "^0.63.0",

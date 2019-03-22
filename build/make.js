@@ -254,7 +254,7 @@ exports.buildBySource = function (source, file, minifiedFile) {
 	console.log(`${file} ${(source.length / 1024).toFixed(0)} KB`)
 	let sourceMapFile = `${file}.map`
 	let minified = minify(source);
-	debugger
+	 
 	console.log("写入代码")
 
 
