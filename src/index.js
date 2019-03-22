@@ -13,13 +13,14 @@
  Create date: 2019-03-06 16:20
  */
 
+//require("es5-polyfill")
 
 let Yox = require("yox");
 let jQuery = require("jquery");
 let _ = require("lodash");
-let Store  = require("./lib/store").Store;
+let Store = require("./lib/store").Store;
 let Router = require("./lib/router").Router;
-let dayjs  = require("./lib/dayjs").dayjs;
+let dayjs = require("./lib/dayjs").dayjs;
 let pkg = require("../package.json");
 
 
@@ -34,8 +35,7 @@ Yox.prototype.hasSlot = function (name) {
 
 let FireBird = (function () {
 	function FireBird(options) {
-		var app = new Yox(options);
-		return app;
+		return new Yox(options);
 	}
 
 	return FireBird;
@@ -58,6 +58,31 @@ FireBird.error = (msg) => {
 
 FireBird.components = {};
 
+FireBird.classes = {};
+
+FireBird.namespace = function () {
+	var a = arguments, o, i = 0, j, d, arg;
+	for (; i < a.length; i++) {
+		o = this; //Reset base object per argument or it will get reused from the last
+		arg = a[i];
+		if (arg.indexOf(".") > -1) { //Skip this if no "." is present
+			d = arg.split(".");
+			for (j = (d[0] == 'FireBird') ? 1 : 0; j < d.length; j++) {
+				o[d[j]] = o[d[j]] || {};
+				o = o[d[j]];
+			}
+		} else {
+			o[arg] = o[arg] || {};
+			o = o[arg]; //Reset base object to the new object so it's returned
+		}
+	}
+	return o;
+};
+
+FireBird.create = (name, options) => {
+	return new FireBird($.extend(true, {}, FireBird.components[name], options));
+};
+
 FireBird.component = (name, options) => {
 	if (typeof name === "string") {
 		if (typeof options === "function") {
@@ -79,6 +104,8 @@ FireBird.component = (name, options) => {
 		Yox.component(name, options);
 		FireBird.log(`组件 ${name} 已注册`);
 		FireBird.components[name] = options;
+		//FireBird.defaults[name] = options;
+		FireBird.namespace(name);
 		return options;
 	}
 	if (typeof name === "object") {
@@ -158,7 +185,7 @@ FireBird.component("PageApp", {
 });
 
 
-window.FireBird = FireBird;
+global.FireBird = FireBird;
 
 let version = pkg.version;
 console.log(" _______________________________________________________________________");
@@ -191,11 +218,19 @@ console.log("|__________________________________________________________________
 // 	lodash: _
 // };
 
-exports.FireBird = FireBird;
-exports.Store = Store;
-exports.Router = Router;
-exports.jQuery = jQuery;
-exports.$ = jQuery;
-exports._ = _;
-exports.dayjs = dayjs;
-exports.version = version;
+// exports.FireBird = FireBird;
+// exports.Store = Store;
+// exports.Router = Router;
+// exports.jQuery = jQuery;
+// exports.$ = jQuery;
+// exports._ = _;
+// exports.dayjs = dayjs;
+// exports.version = version;
+
+// export default {
+// 	FireBird, Store, Router, jQuery, $, _, dayjs, version
+// }
+
+let $ = jQuery, lodash = _;
+
+module.exports = {FireBird, Store, Router, jQuery, $, _, lodash, dayjs, version}

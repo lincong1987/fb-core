@@ -21,6 +21,7 @@
 let fs = require('fs')
 let path = require('path')
 let uglifyjs = require('uglify-js')
+let es3ify = require("es3ify")
 
 function optimize(source) {
 
@@ -189,6 +190,20 @@ var possibleConstructorReturn = function (self, call) {
 			)
 	}
 
+
+	source = es3ify.transform(source);
+
+
+	// source = source
+	// 	.replace(
+	// 		/\/\/ shim start([\s\S]+?)\/\/ shim end/,
+	// 		function ($0, $1) {
+	// 			shim = $1
+	// 			return ''
+	// 		}
+	// 	)
+
+
 	return source
 
 }
@@ -204,9 +219,13 @@ function minify(source) {
 				properties: false,
 			},
 			mangle: {
-				reserved: ['require', 'exports', 'module']
+				reserved: ['require', 'exports', 'module'],
 			},
-			sourceMap: {}
+			output: {
+				quote_keys: true
+			},
+			sourceMap: {},
+			ie8: true
 		}
 	)
 }
@@ -229,13 +248,18 @@ exports.build = function (file, minifiedFile) {
 }
 
 exports.buildBySource = function (source, file, minifiedFile) {
+
+	let polyfill = fs.readFileSync(require.resolve("fb-polyfill"));
+	source = polyfill + optimize(source);
+	console.log(`${file} ${(source.length / 1024).toFixed(0)} KB`)
 	let sourceMapFile = `${file}.map`
-	//let source = optimize(readFile(file))
 	let minified = minify(source);
 	debugger
 	console.log("写入代码")
+
+
 	writeFile(file, source)
-	console.log("写入min code")
+	console.log(`写入min code, ${minifiedFile}: ${(minified.code.length / 1024).toFixed(0)} KB`)
 	writeFile(minifiedFile, minified.code)
 	console.log("写入source map")
 	writeFile(sourceMapFile, minified.map)
