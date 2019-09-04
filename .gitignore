@@ -4,3 +4,4 @@ package-lock.json
 devtmp
 dist
 .history
+.idea

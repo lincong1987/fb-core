@@ -6,3 +6,7 @@ example
 edp-*
 *.sketch
 package-lock.json
+.vscode
+.history
+.idea
+fb-core.iml

@@ -20,8 +20,12 @@
 
 let fs = require('fs')
 let path = require('path')
-let uglifyjs = require('uglify-js')
-let es3ify = require("es3ify")
+let dayjs = require("dayjs");
+let uglifyjs = require('uglify-es')
+let es3ify = require("es3ify");
+
+
+// const jstransformSimple = require("jstransform/simple");
 
 function optimize(source) {
 
@@ -29,10 +33,10 @@ function optimize(source) {
 	 * 因为 typeof 的问题，Babel 会加上下面这段代码，因此要删掉
 	 *
 	 * var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) {
-   *   return typeof obj;
-   * } : function (obj) {
-   *   return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
-   * };
+	 *   return typeof obj;
+	 * } : function (obj) {
+	 *   return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
+	 * };
 	 *
 	 */
 
@@ -114,16 +118,16 @@ var possibleConstructorReturn = function (self, call) {
 
 	/**
 	 * var Node$2 = function Node(type) {
-   *   classCallCheck(this, Node);
-   *   this.type = type;
-   * };
+	 *   classCallCheck(this, Node);
+	 *   this.type = type;
+	 * };
 	 *
 	 * 此例改成
 	 *
 	 * var Node$2 = function Node$2(type) {
-   * 	 classCallCheck(this, Node$2);
-   * 	 this.type = type;
-   * }
+	 * 	 classCallCheck(this, Node$2);
+	 * 	 this.type = type;
+	 * }
 	 */
 	source = source.replace(
 		/var ([\w$]+) = function (\w+)\([^)]+\) {\n\s+classCallCheck\(this, \w+\);/g,
@@ -144,10 +148,15 @@ var possibleConstructorReturn = function (self, call) {
 	source = source.replace(
 		/(\b)([\w$]+) = function ([\w$]+)/g,
 		function ($0, $1, $2, $3) {
+
+			if ($0.indexOf("_") === 0) {
+				return $0;
+			}
 			if ($2 === $3) {
 				return `${$1}${$2} = function `
 			}
-			throw new Error(`${$1} is not equals to ${$2}`)
+
+			// throw new Error(`${$1} is not equals to ${$2}`)
 		}
 	)
 
@@ -189,10 +198,37 @@ var possibleConstructorReturn = function (self, call) {
 				}
 			)
 	}
+debugger
+	source = source.replace(/"The data \\"" \+ keypath \+ "\\" can't be found in the current context, start looking up."/g, 
+	`"该路径 "+ keypath +" 的数据无法在本context中找到。"`)
+
+	//source = source.replace(`"emitter.on(type, listener) invoke failed\uFF1A\n\n\"listener\" is expected to be a Function or an EmitterOptions.\n"`, ``);
+
+	source = source.replace(/'Yox debug'/, "'debug'");
+	source = source.replace(/'Yox info'/, "'info'");
+	source = source.replace(/'Yox warn'/, "'warn'");
+	source = source.replace(/'Yox error'/, "'error'");
+	source = source.replace(/'Yox fatal'/, "'fatal'");
+	source = source.replace(/'YOX_LOG_LEVEL'/, "'DEBUG_LEVEL'");
+
+	source = source.replace(/Yox\.filter = function \(name, filter\) {/, `
+		
+		Yox.filters = globalFilters;
+	
+		Yox.filter = function (name, filter) {
+	
+	`);
+
 
 
 	source = es3ify.transform(source);
 
+
+	// source = jstransformSimple.transform(source, {
+	// 	harmony: true,
+	// 	utility: true,
+	// 	target: "es3"
+	// }).code;
 
 	// source = source
 	// 	.replace(
@@ -203,6 +239,26 @@ var possibleConstructorReturn = function (self, call) {
 	// 		}
 	// 	)
 
+	source = source.replace("typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :", "");
+	source = source.replace("typeof define === 'function' && define.amd ? define(['exports'], factory) :", "");
+	source = source.replace("(global = global || self, factory(global['fb-core'] = {}));", `
+		/* fb loader wrapper start */
+		
+		if(typeof fb !== "undefined") {
+		
+			define(function (require, exports, module) {
+				var _exports = {};
+				factory(_exports);
+				module.exports = _exports;
+			});
+		
+		} else {
+			typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) : typeof define === 'function' && define.amd ? define(['exports'], factory) : (factory((global['fb-core'] = {})));
+		}
+		/* fb loader wrapper end */
+	`);
+
+	source = source.replace("{{build-date}}", dayjs().format());
 
 	return source
 
@@ -238,7 +294,7 @@ function writeFile(file, content) {
 	fs.writeFileSync(path.join(__dirname, '../dist', file), content)
 }
 
-exports.build = function (file, minifiedFile) {
+function build(file, minifiedFile) {
 	let sourceMapFile = `${file}.map`
 	let source = optimize(readFile(file))
 	let minified = minify(source)
@@ -247,14 +303,14 @@ exports.build = function (file, minifiedFile) {
 	writeFile(sourceMapFile, minified.map)
 }
 
-exports.buildBySource = function (source, file, minifiedFile) {
+function buildBySource(source, file, minifiedFile) {
 
 	let polyfill = fs.readFileSync(require.resolve("fb-polyfill"));
 	source = polyfill + optimize(source);
 	console.log(`${file} ${(source.length / 1024).toFixed(0)} KB`)
 	let sourceMapFile = `${file}.map`
 	let minified = minify(source);
-	 
+
 	console.log("写入代码")
 
 
@@ -267,3 +323,6 @@ exports.buildBySource = function (source, file, minifiedFile) {
 
 
 // build('fb-core.js', 'fb-core.min.js');
+
+
+module.exports = { build, buildBySource };

@@ -15,7 +15,7 @@
 
 //require("es5-polyfill")
 
-let Yox = require("yox");
+let Yox = require("./lib/yox");
 let jQuery = require("jquery");
 let _ = require("lodash");
 let Store = require("./lib/store").Store;
@@ -41,9 +41,12 @@ let FireBird = (function () {
 	return FireBird;
 })();
 
+FireBird.prototype = Yox.prototype;
+
 _.each(Yox, (func, name) => {
 	FireBird[name] = func;
 });
+
 
 FireBird.log = (msg) => {
 	console.log(`[FireBird info]: ${msg}`);
@@ -83,12 +86,18 @@ FireBird.create = (name, options) => {
 	return new FireBird($.extend(true, {}, FireBird.components[name], options));
 };
 
+FireBird.addMember = function (name, member) {
+	Yox.prototype[name] = member;
+	return this;
+};
+
+
 FireBird.component = (name, options) => {
 	if (typeof name === "string") {
 		if (typeof options === "function") {
 
 		} else {
-			options.name = name;
+			options.$$name = name;
 			if (options.extend) {
 
 				if (typeof options.extend === "string") {
@@ -96,7 +105,7 @@ FireBird.component = (name, options) => {
 				}
 
 				options = $.extend(true, {}, options.extend, options, {
-					"_parent": options.extend.name
+					"$$parent": options.extend.$$name
 				});
 			}
 		}
@@ -135,29 +144,48 @@ FireBird.partial = (name, template) => {
  * 组件 class 处理器
  * @param cssObject
  * @returns {string}
+ *
+ * @example
+ *
+ * FireBird.css({text: true, valid: true, invalid: false});
+ *
+ * // class="text valid"
  */
-FireBird.css = (cssObject = []) => {
+FireBird.css = (cssObject = {}) => {
 	let classes = [];
-	_.each(cssObject, (css) => {
-		if (_.isObject(css)) {
-			_.each(css, (v, k) => {
-				if (typeof v !== "undefined" && v === true) {
-					classes.push(k);
-				}
-			});
-		}
-		if (_.isString(css)) {
-			classes.push(css);
+	_.each(cssObject, (value, cssName) => {
+		if (value === true) {
+			classes.push(cssName);
 		}
 	});
 	return classes.join(" ");
 };
 
+
 FireBird.style = (styleObject = {}) => {
 	let style = [];
 
 	_.each(styleObject, (v, k) => {
-		style.push(`${k}: ${v}`);
+		switch (k) {
+			case "width":
+			case "height":
+			case "min-height":
+			case "min-width":
+			case "top":
+			case "left":
+			case "bottom":
+			case "right":
+			case "line-height":
+				if (_.isNumber(v)) {
+					style.push(`${k}: ${v}px`);
+				} else {
+					style.push(`${k}: ${v}`);
+				}
+				break;
+			default:
+				style.push(`${k}: ${v}`);
+		}
+
 	});
 
 	return style.join("; ");
@@ -170,6 +198,31 @@ FireBird.oneOf = (value, defaults, array = []) => {
 	return value;
 };
 
+FireBird.filter("css", FireBird.css);
+
+FireBird.filter("style", FireBird.style);
+
+FireBird.filter("oneOf", FireBird.oneOf);
+
+FireBird.compile = Yox.compile;
+
+FireBird.filter("_defaults", function (val, def) {
+	return typeof val === "undefined" ? (typeof def === "undefined" ? "" : def) : val;
+});
+
+FireBird.filter("Function", function (val, def) {
+	return (new Function("//this data from FireBird Filter 'Function' Wrapper; \n return " + (typeof val === "undefined" ? (typeof def === "undefined" ? "" : def) : val)))();
+});
+
+FireBird.filter("JSON_parse", function (val, def) {
+	return JSON.parse(typeof val === "undefined" ? (typeof def === "undefined" ? "" : def) : val);
+});
+
+FireBird.filter("JSON_stringify", function (val, def, replacer, space) {
+	return JSON.stringify(typeof val === "undefined" ? (typeof def === "undefined" ? "" : def) : val, replacer, space);
+});
+
+FireBird.directive = Yox.directive;
 
 // 将 lodash 注入
 FireBird.filter(_);
@@ -184,6 +237,9 @@ FireBird.component("PageApp", {
 	}
 });
 
+FireBird.App = function () {
+	console.log("FireBird.App")
+};
 
 global.FireBird = FireBird;
 
@@ -200,7 +256,7 @@ console.log("|  ##       #### ##     ## ######## ########  #### ##     ## ######
 console.log("|                                                                       |");
 console.log(`|${_.pad("", 71)}|`);
 console.log(`|${_.pad("Version: " + version, 71)}|`);
-console.log(`|${_.pad("Date: " + dayjs().format(), 71)}|`);
+console.log(`|${_.pad("Date: {{build-date}}", 71)}|`);
 console.log(`|${_.pad("Author: lincong1987@gmail.com", 71)}|`);
 //console.log("|                                                                       |");
 console.log("|_______________________________________________________________________|");
@@ -233,4 +289,14 @@ console.log("|__________________________________________________________________
 
 let $ = jQuery, lodash = _;
 
-module.exports = {FireBird, Store, Router, jQuery, $, _, lodash, dayjs, version}
+module.exports = {
+	FireBird,
+	Store,
+	Router,
+	jQuery,
+	$,
+	_,
+	lodash,
+	dayjs,
+	version
+};

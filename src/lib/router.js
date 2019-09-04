@@ -13,18 +13,18 @@
  Create date: 2019-01-14 18:12
  */
 
-import YoxRouter from "yox-router"
+import Router from "./yox-router";
 
-let Router = YoxRouter;
+ 
 
 
-Router.prototype.add = function (path, data) {
-
-	if (data && data.name) {
-		this.name2Path[data.name] = path;
-	}
-	this.path2Route[path] = data;
-};
+// Router.prototype.add = function (path, data) {
+//
+// 	if (data && data.name) {
+// 		this.name2Path[data.name] = path;
+// 	}
+// 	this.path2Route[path] = data;
+// };
 
 
 export {Router};

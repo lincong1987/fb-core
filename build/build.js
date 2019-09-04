@@ -31,8 +31,8 @@ let output = {
 	format: 'umd',
 	inlineDynamicImports: true,
 	legacy: true,
-	name: 'FireBird',
-	exports: 'named',
+	name: 'fb-core',
+	exports: 'auto',
 	//globals: ['lodash', "jquery", "dayjs"]
 };
 
