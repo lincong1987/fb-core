@@ -34,7 +34,7 @@
   "dependencies": {
     "dayjs": "^1.8.6",
     "fb-polyfill": "^1.0.2",
-    "jquery": "1.12.4",
+    "jquery": "3.5.0",
     "lodash": "^4.17.15"
   },
   "repository": {
